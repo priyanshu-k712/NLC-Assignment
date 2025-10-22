@@ -41,19 +41,25 @@ def render_sidebar() -> Dict[str, Any]:
         inputs['external_content'] = None
 
         if source_mode == "Use URL":
-            url_input = st.text_input("Enter URL", placeholder="https://example.com/lesson-source")
+            url_input = st.text_input("Enter URL", placeholder="(For right now Use Wikipedia URL)")
             if url_input:
                 st.info("URL input received. The core logic will fetch content from this URL.")
-                inputs['external_content'] = url_input  # Pass URL string for the loader
+                inputs['external_content'] = url_input
             else:
                 st.warning("Please provide a valid URL.")
 
         elif source_mode == "Upload File":
-            uploaded_file = st.file_uploader("Upload PDF or Text File", type=['pdf', 'txt', 'md'])
+            uploaded_file = st.file_uploader("Upload DOCX or Text File", type=['docx', 'doc', 'txt'])
             if uploaded_file is not None:
+                try:
+                    with open("data/"+uploaded_file.name, 'wb') as f:
+                        f.write(uploaded_file.getvalue())
+                    inputs['external_content'] = "data/"+uploaded_file.name
+                    st.success(f"File '{uploaded_file.name}' uploaded successfully.")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                    st.session_state['generated_content'] = f"Invocation Error: {e}"
 
-                inputs['external_content'] = uploaded_file.name
-                st.success(f"File '{uploaded_file.name}' uploaded successfully.")
 
 
 
