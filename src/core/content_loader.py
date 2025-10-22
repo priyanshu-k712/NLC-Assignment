@@ -17,3 +17,7 @@ def load_content_from_file(filename):
     with open(filename, 'rb') as f:
         print(f.read())
         return f.read()
+
+def load_ppt(path):
+    with open(path, 'rb') as f:
+        return f.read()

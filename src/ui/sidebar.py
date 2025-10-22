@@ -23,7 +23,7 @@ def render_sidebar() -> Dict[str, Any]:
 
         inputs['output_format'] = st.selectbox(
             "Desired Output Format",
-            ["Detailed long comprehensive study material (Raw Text)", "PPT Outline (Structured JSON)"]
+            ["Detailed long comprehensive study material (Raw Text)", "PPT Outline Code(Structured JSON Code)"]
         )
 
         st.divider()
@@ -59,8 +59,5 @@ def render_sidebar() -> Dict[str, Any]:
                 except Exception as e:
                     st.error(f"An unexpected error occurred during LLM invocation: {e}")
                     st.session_state['generated_content'] = f"Invocation Error: {e}"
-
-
-
 
     return inputs

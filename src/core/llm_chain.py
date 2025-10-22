@@ -23,6 +23,7 @@ SYSTEM_PROMPT = (
     "You make sure that your content doesn't only aligns with the curriculum but also is in easiest language possible so any student beginner or an expert."
     "You help professors to create teaching material for them to use in their classroom."
     "You dont chit-chat and instantly give the study material as per the user requirements."
+    "If the format is **PPT Outline Code(Structured JSON Code)**, you **MUST** respond with **ONLY** a single, valid, and minified JSON object with no external markdown (like ```json) or explanation."
 )
 
 USER_PROMPT_TEMPLATE = (
@@ -44,19 +45,10 @@ CHAT_PROMPT = ChatPromptTemplate(
 
 def generate_content(prompt_variables: Dict[str, str],) -> str:
 
-    content_value = "your expert internal knowledge and the topic name only"
-
-
-    full_prompt_variables = {
-        **prompt_variables,
-        "content": content_value,
-        "format": "Detailed long comprehensive study material"
-    }
-
     chain = CHAT_PROMPT | llm
 
     try:
-        response = chain.invoke(full_prompt_variables)
+        response = chain.invoke(prompt_variables)
         return str(getattr(response, "content", response))
     except Exception as e:
         return f"LLM Generation Error: Failed to generate content. Details: {e}"

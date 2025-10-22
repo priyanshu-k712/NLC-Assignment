@@ -1,11 +1,12 @@
 from sidebar import render_sidebar
 from src.core.llm_chain import generate_content, generate_content_from_data
-from src.core.content_loader import load_content_from_url, load_content_from_file
+from src.core.content_loader import load_content_from_url, load_content_from_file, load_ppt
 import streamlit as st
-
+from src.core.ppt_generator import generate_pptx
+import json
+import re
 
 def main_app():
-
     st.set_page_config(
         page_title="LLM Content Creator",
         layout="wide",
@@ -15,12 +16,11 @@ def main_app():
     if 'generated_content' not in st.session_state:
         st.session_state['generated_content'] = ""
 
-    st.title("LLM-Powered Educational Content Creator")
+    st.title("LLM-Powered Educational Content Creator   ")
     st.markdown(
         "Configure your lesson details in the sidebar. The LLM will use its internal knowledge to generate content.")
 
     inputs = render_sidebar()
-
 
     prompt_vars = {
         'year': inputs['year'],
@@ -34,20 +34,47 @@ def main_app():
 
     if st.button("Generate Content", type="primary"):
 
-        with st.spinner(f"Creating lesson plan for '{inputs['topic']}'..."):
+        with st.spinner(f"Creating {inputs['output_format']} for '{inputs['topic']}'..."):
 
-            if len(inputs['external_content']) == 0:
-                try:
+            if inputs['external_content'] is None:
+                if inputs['output_format'] == 'PPT Outline Code(Structured JSON Code)':
+                    try:
+                        prompt_vars['content'] = ("your expert internal knowledge and the topic name only. "
+                                                  "Since the requested format is **PPT Outline Code(Structured JSON Code)**, "
+                                                  "the output MUST be a JSON array of slides, each having 'title' and 'bullets' keys.")
+                        content = generate_content(prompt_vars)
+                        clean_content = re.sub(r"```(?:json)?|```", "", content).strip()
+                        match = re.search(r"\[.*\]", clean_content, re.DOTALL)
+                        if match:
+                            clean_content = match.group(0)
+                        slides_data = json.loads(clean_content)
+                        path = generate_pptx(slides_data)
+                        try:
+                            st.download_button(
+                                label="Download PowerPoint File",
+                                data=load_ppt(path),
+                                file_name=inputs['topic'],
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                            )
+                        except Exception as e:
+                            st.error(str(e))
+                        # st.session_state['generated_content'] = content
+                        st.success("Content generation complete!")
+                    except Exception as e:
+                        st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                        st.session_state['generated_content'] = f"Invocation Error: {e}"
+                else:
+                    try:
+                        prompt_vars['content'] = "your expert internal knowledge and the topic name only."
+                        content = generate_content(prompt_vars)
+                        st.session_state['generated_content'] = content
+                        st.success("Content generation complete!")
+                    except Exception as e:
+                        st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                        st.session_state['generated_content'] = f"Invocation Error: {e}"
 
-                    content = generate_content(prompt_vars)
-
-                    st.session_state['generated_content'] = content
-                    st.success("Content generation complete!")
-                except Exception as e:
-                    st.error(f"An unexpected error occurred during LLM invocation: {e}")
-                    st.session_state['generated_content'] = f"Invocation Error: {e}"
             else:
-                if inputs['source_mode']=="Use URL":
+                if inputs['source_mode'] == "Use URL":
                     try:
                         data = load_content_from_url(inputs['external_content'])
                         prompt_vars['content'] = data
@@ -71,7 +98,6 @@ def main_app():
                     except Exception as e:
                         st.error(f"An unexpected error occurred during LLM invocation: {e}")
                         st.session_state['generated_content'] = f"Invocation Error: {e}"
-
 
     if st.session_state['generated_content']:
         st.markdown(st.session_state['generated_content'])
