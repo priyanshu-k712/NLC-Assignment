@@ -10,7 +10,7 @@ api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("GOOGLE_API_KEY not found in environment variables. Please check your .env file.")
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", api_key=api_key)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=api_key)
 
 
 SYSTEM_PROMPT = (
@@ -57,6 +57,15 @@ def generate_content(prompt_variables: Dict[str, str],) -> str:
 
     try:
         response = chain.invoke(full_prompt_variables)
+        return str(getattr(response, "content", response))
+    except Exception as e:
+        return f"LLM Generation Error: Failed to generate content. Details: {e}"
+
+
+def generate_content_from_data(prompt_variables: Dict[str, str]) -> str:
+    chain = CHAT_PROMPT | llm
+    try:
+        response = chain.invoke(prompt_variables)
         return str(getattr(response, "content", response))
     except Exception as e:
         return f"LLM Generation Error: Failed to generate content. Details: {e}"

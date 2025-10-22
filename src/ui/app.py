@@ -1,5 +1,6 @@
 from sidebar import render_sidebar
-from src.core.llm_chain import generate_content
+from src.core.llm_chain import generate_content, generate_content_from_data
+from src.core.content_loader import load_content
 import streamlit as st
 
 
@@ -20,8 +21,6 @@ def main_app():
 
     inputs = render_sidebar()
 
-    required_fields = ['topic', 'department', 'subject']
-    is_ready = all(inputs.get(field) and inputs.get(field).strip() for field in required_fields)
 
     prompt_vars = {
         'year': inputs['year'],
@@ -33,21 +32,31 @@ def main_app():
 
     st.header("Generated Study Material")
 
-    if st.button("Generate Content", type="primary", disabled=not is_ready):
+    if st.button("Generate Content", type="primary"):
 
         with st.spinner(f"Creating lesson plan for '{inputs['topic']}'..."):
 
-            raw_source_text = None
+            if len(inputs['external_content']) == 0:
+                try:
 
-            try:
+                    content = generate_content(prompt_vars)
 
-                content = generate_content(prompt_vars, raw_source_text)
+                    st.session_state['generated_content'] = content
+                    st.success("Content generation complete!")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                    st.session_state['generated_content'] = f"Invocation Error: {e}"
+            else:
+                try:
+                    data = load_content(inputs['external_content'])
+                    prompt_vars['content'] = data
+                    content = generate_content_from_data(prompt_vars)
+                    st.session_state['generated_content'] = content
+                    st.success("Content generation complete!")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                    st.session_state['generated_content'] = f"Invocation Error: {e}"
 
-                st.session_state['generated_content'] = content
-                st.success("Content generation complete!")
-            except Exception as e:
-                st.error(f"An unexpected error occurred during LLM invocation: {e}")
-                st.session_state['generated_content'] = f"Invocation Error: {e}"
 
     if st.session_state['generated_content']:
         st.markdown(st.session_state['generated_content'])
