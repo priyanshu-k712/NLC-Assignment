@@ -1,19 +1,17 @@
 from pptx import Presentation
 
 def generate_pptx(json_code):
-    path = "data/output.pptx"  # added extension for clarity
+    path = "data/output.pptx"
     ppt = Presentation()
-    slide_layout = ppt.slide_layouts[1]  # Title and Content layout
+    slide_layout = ppt.slide_layouts[1]
 
     for slide_data in json_code:
         slide = ppt.slides.add_slide(slide_layout)
         title_shape = slide.shapes.title
-        content_shape = slide.placeholders[1]  # body placeholder
+        content_shape = slide.placeholders[1]
 
-        # Title
         title_shape.text = slide_data.get('title', 'Untitled Slide')
 
-        # Text content
         tf = content_shape.text_frame
         tf.clear()
 

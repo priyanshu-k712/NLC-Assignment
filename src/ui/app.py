@@ -60,10 +60,9 @@ def main_app():
                             )
                         except Exception as e:
                             st.error(str(e))
-                        # st.session_state['generated_content'] = content
                         st.success("Content generation complete!")
                     except Exception as e:
-                        st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                        st.error(f"An unexpected error occurred during Generating PPT with Topic: {e}")
                         st.session_state['generated_content'] = f"Invocation Error: {e}"
                 else:
                     try:
@@ -72,34 +71,92 @@ def main_app():
                         st.session_state['generated_content'] = content
                         st.success("Content generation complete!")
                     except Exception as e:
-                        st.error(f"An unexpected error occurred during LLM invocation: {e}")
+                        st.error(f"An unexpected error occurred during Generating Content with Topic: {e}")
                         st.session_state['generated_content'] = f"Invocation Error: {e}"
 
             else:
                 if inputs['source_mode'] == "Use URL":
-                    try:
-                        data = load_content_from_url(inputs['external_content'])
-                        prompt_vars['content'] = data
-                        content = generate_content_from_data(prompt_vars)
-                        st.session_state['generated_content'] = content
-                        st.success("Content generation complete!")
-                    except Exception as e:
-                        st.error(f"An unexpected error occurred during LLM invocation: {e}")
-                        st.session_state['generated_content'] = f"Invocation Error: {e}"
-                else:
-                    try:
-                        data_bytes = load_content_from_file(inputs['external_content'])
+                    if inputs['output_format'] == 'PPT Outline Code(Structured JSON Code)':
                         try:
-                            data_string = data_bytes.decode('utf-8', errors='replace')
-                        except UnicodeDecodeError:
-                            data_string = data_bytes.decode('latin-1', errors='replace')
-                        prompt_vars['content'] = data_string
-                        content = generate_content_from_data(prompt_vars)
-                        st.session_state['generated_content'] = content
-                        st.success("Content generation complete!")
-                    except Exception as e:
-                        st.error(f"An unexpected error occurred during LLM invocation: {e}")
-                        st.session_state['generated_content'] = f"Invocation Error: {e}"
+                            data = load_content_from_url(inputs['external_content'])
+                            prompt_vars['content'] = data
+                            prompt_vars['format'] = inputs['output_format']
+                            code = generate_content_from_data(prompt_vars)
+                            clean_content = re.sub(r"```(?:json)?|```", "", code).strip()
+                            match = re.search(r"\[.*\]", clean_content, re.DOTALL)
+                            if match:
+                                clean_content = match.group(0)
+                            slides_data = safe_load_json(clean_content)
+                            path = generate_pptx(slides_data)
+                            try:
+                                st.download_button(
+                                    label="Download PowerPoint File",
+                                    data=load_ppt(path),
+                                    file_name=f"{inputs['topic']}.pptx",
+                                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                )
+                            except Exception as e:
+                                st.error(str(e))
+                            st.success("Content generation complete!")
+                        except Exception as e:
+                            st.error(f"An unexpected error occurred during Generating PPT With URL: {e}")
+                            st.session_state['generated_content'] = f"Invocation Error: {e}"
+                    else:
+                        try:
+                            data = load_content_from_url(inputs['external_content'])
+                            prompt_vars['content'] = data
+                            content = generate_content_from_data(prompt_vars)
+                            st.session_state['generated_content'] = content
+                            st.success("Content generation complete!")
+                        except Exception as e:
+                            st.error(f"An unexpected error occurred during Generating Content with Topic: {e}")
+                            st.session_state['generated_content'] = f"Invocation Error: {e}"
+
+                else:
+                    if inputs['output_format'] == 'PPT Outline Code(Structured JSON Code)':
+                        try:
+                            data_bytes = load_content_from_file(inputs['external_content'])
+                            try:
+                                data_string = data_bytes.decode('utf-8', errors='replace')
+                            except UnicodeDecodeError:
+                                data_string = data_bytes.decode('latin-1', errors='replace')
+                            prompt_vars['content'] = data_string
+                            prompt_vars['format'] = inputs['output_format']
+                            code = generate_content_from_data(prompt_vars)
+                            clean_content = re.sub(r"```(?:json)?|```", "", code).strip()
+                            match = re.search(r"\[.*\]", clean_content, re.DOTALL)
+                            if match:
+                                clean_content = match.group(0)
+                            slides_data = safe_load_json(clean_content)
+                            path = generate_pptx(slides_data)
+                            try:
+                                st.download_button(
+                                    label="Download PowerPoint File",
+                                    data=load_ppt(path),
+                                    file_name=f"{inputs['topic']}.pptx",
+                                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                )
+                            except Exception as e:
+                                st.error(str(e))
+                            st.success("Content generation complete!")
+                        except Exception as e:
+                            st.error(f"An unexpected error occurred during Generating PPT with File Upload: {e}")
+                            st.session_state['generated_content'] = f"Invocation Error: {e}"
+                    else:
+                        try:
+                            data_bytes = load_content_from_file(inputs['external_content'])
+                            try:
+                                data_string = data_bytes.decode('utf-8', errors='replace')
+                            except UnicodeDecodeError:
+                                data_string = data_bytes.decode('latin-1', errors='replace')
+                            prompt_vars['content'] = data_string
+                            content = generate_content_from_data(prompt_vars)
+                            st.session_state['generated_content'] = content
+                            st.success("Content generation complete!")
+                        except Exception as e:
+                            st.error(f"An unexpected error occurred during Generating Content with File Upload: {e}")
+                            st.session_state['generated_content'] = f"Invocation Error: {e}"
+
 
     if st.session_state['generated_content']:
         st.markdown(st.session_state['generated_content'])
