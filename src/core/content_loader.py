@@ -25,18 +25,17 @@ def load_ppt(path):
 
 
 def safe_load_json(content: str):
-    # Remove markdown and whitespace
-    content = re.sub(r"```(?:json)?|```", "", content).strip()
+    # Remove markdown code fences if any
+    s = re.sub(r"```(?:json)?|```", "", s).strip()
 
-    # Extract first JSON array/object
-    match = re.search(r"(\[.*\]|\{.*\})", content, re.DOTALL)
+    # Extract only the first JSON array (non-greedy)
+    match = re.search(r"\[.*?\]", s, re.DOTALL)
     if not match:
-        raise ValueError("No JSON found in LLM output")
+        raise ValueError("No JSON array found in the string")
+    s = match.group(0)
 
-    json_text = match.group(0)
+    # Fix common trailing commas
+    s = re.sub(r",\s*]", "]", s)
+    s = re.sub(r",\s*}", "}", s)
 
-    try:
-        return json.loads(json_text)
-    except json.JSONDecodeError as e:
-        snippet = json_text[max(0, e.pos - 20):e.pos + 20]
-        raise ValueError(f"JSON parsing failed near: {snippet}\nOriginal error: {e}")
+    return json.loads(s)
