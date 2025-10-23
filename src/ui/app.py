@@ -1,8 +1,11 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 from sidebar import render_sidebar
-from ..core.llm_chain import generate_content, generate_content_from_data
-from ..core.content_loader import load_content_from_url, load_content_from_file, load_ppt
+from src.core.llm_chain import generate_content, generate_content_from_data
+from src.core.content_loader import load_content_from_url, load_content_from_file, load_ppt
 import streamlit as st
-from ..core.ppt_generator import generate_pptx
+from src.core.ppt_generator import generate_pptx
 import json
 import re
 
