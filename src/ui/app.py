@@ -3,10 +3,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from sidebar import render_sidebar
 from src.core.llm_chain import generate_content, generate_content_from_data
-from src.core.content_loader import load_content_from_url, load_content_from_file, load_ppt
+from src.core.content_loader import load_content_from_url, load_content_from_file, load_ppt, safe_load_json
 import streamlit as st
 from src.core.ppt_generator import generate_pptx
-import json
 import re
 
 def main_app():
@@ -50,13 +49,13 @@ def main_app():
                         match = re.search(r"\[.*\]", clean_content, re.DOTALL)
                         if match:
                             clean_content = match.group(0)
-                        slides_data = json.loads(clean_content)
+                        slides_data = safe_load_json(clean_content)
                         path = generate_pptx(slides_data)
                         try:
                             st.download_button(
                                 label="Download PowerPoint File",
                                 data=load_ppt(path),
-                                file_name=inputs['topic'],
+                                file_name=f"{inputs['topic']}.pptx",
                                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
                             )
                         except Exception as e:

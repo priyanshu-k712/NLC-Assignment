@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests as r
-
+import json
+import re
 
 def load_content_from_url(url):
     header = {
@@ -21,3 +22,21 @@ def load_content_from_file(filename):
 def load_ppt(path):
     with open(path, 'rb') as f:
         return f.read()
+
+
+def safe_load_json(content: str):
+    # Remove markdown and whitespace
+    content = re.sub(r"```(?:json)?|```", "", content).strip()
+
+    # Extract first JSON array/object
+    match = re.search(r"(\[.*\]|\{.*\})", content, re.DOTALL)
+    if not match:
+        raise ValueError("No JSON found in LLM output")
+
+    json_text = match.group(0)
+
+    try:
+        return json.loads(json_text)
+    except json.JSONDecodeError as e:
+        snippet = json_text[max(0, e.pos - 20):e.pos + 20]
+        raise ValueError(f"JSON parsing failed near: {snippet}\nOriginal error: {e}")
