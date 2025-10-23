@@ -3,7 +3,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from sidebar import render_sidebar
 from src.core.llm_chain import generate_content, generate_content_from_data
-from src.core.content_loader import load_content_from_url, load_content_from_file, load_ppt, safe_load_json
+from src.core.content_loader import load_content_from_url, load_content_from_file, load_ppt, safe_load_json_from_string
 import streamlit as st
 from src.core.ppt_generator import generate_pptx
 import re
@@ -49,7 +49,7 @@ def main_app():
                         match = re.search(r"\[.*\]", clean_content, re.DOTALL)
                         if match:
                             clean_content = match.group(0)
-                        slides_data = safe_load_json(clean_content)
+                        slides_data = safe_load_json_from_string(clean_content)
                         path = generate_pptx(slides_data)
                         try:
                             st.download_button(
@@ -86,7 +86,7 @@ def main_app():
                             match = re.search(r"\[.*\]", clean_content, re.DOTALL)
                             if match:
                                 clean_content = match.group(0)
-                            slides_data = safe_load_json(clean_content)
+                            slides_data = safe_load_json_from_string(clean_content)
                             path = generate_pptx(slides_data)
                             try:
                                 st.download_button(
@@ -127,7 +127,7 @@ def main_app():
                             match = re.search(r"\[.*\]", clean_content, re.DOTALL)
                             if match:
                                 clean_content = match.group(0)
-                            slides_data = safe_load_json(clean_content)
+                            slides_data = safe_load_json_from_string(clean_content)
                             path = generate_pptx(slides_data)
                             try:
                                 st.download_button(

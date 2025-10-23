@@ -24,15 +24,15 @@ def load_ppt(path):
         return f.read()
 
 
-def safe_load_json(content: str):
-    if not s:
+def safe_load_json_from_string(input_str: str):
+    if not input_str:
         raise ValueError("Input string is empty")
 
         # Remove markdown code fences if any
-    cleaned = re.sub(r"```(?:json)?|```", "", s).strip()
+    cleaned_str = re.sub(r"```(?:json)?|```", "", input_str).strip()
 
     # Extract only the first JSON array (non-greedy)
-    match = re.search(r"\[.*?\]", cleaned, re.DOTALL)
+    match = re.search(r"\[.*?\]", cleaned_str, re.DOTALL)
     if not match:
         raise ValueError("No JSON array found in the string")
 
