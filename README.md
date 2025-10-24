@@ -15,6 +15,7 @@ TeachCraftAI is a Streamlit web application designed to assist faculty and educa
 ## 📂 Project Structure
 
 Here is the file structure for the project:
+```ini
 ├── src/                           # Source code of the application
 │   ├── core/                      # Core business logic and LLM interfaces
 │   │   ├── llm_chain.py           # LangChain setup and prompt invocation
@@ -30,7 +31,7 @@ Here is the file structure for the project:
 ├── .gitignore                     # Files and directories to exclude
 ├── requirements.txt               # List of all Python dependencies
 └── README.md                      # Project description, setup, and usage instructions
-
+```
 
 ## 🚀 Getting Started
 
