@@ -32,7 +32,9 @@ def safe_load_json_from_string(input_str: str):
     cleaned_str = re.sub(r"```(?:json)?|```", "", input_str).strip()
 
     # Extract only the first JSON array (non-greedy)
-    match = re.search(r"\[.*?\]", cleaned_str, re.DOTALL)
+    # FIX: Changed from non-greedy r"\[.*?\]" to greedy r"\[.*\]"
+    # This ensures the entire JSON array is matched, not just up to the first ']'
+    match = re.search(r"\[.*\]", cleaned_str, re.DOTALL)
     if not match:
         raise ValueError("No JSON array found in the string")
 
