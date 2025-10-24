@@ -5,7 +5,8 @@ from typing import Dict, Any, Optional
 def render_sidebar() -> Dict[str, Any]:
 
     with st.sidebar:
-        st.header("📚 Lesson Plan Creator")
+        st.title('TeachCraftAI')
+        st.header("Lesson Plan Creator")
         st.markdown("Configure the context and input source below.")
 
         st.subheader("Faculty Details")

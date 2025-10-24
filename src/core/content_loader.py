@@ -16,7 +16,6 @@ def load_content_from_url(url):
 
 def load_content_from_file(filename):
     with open(filename, 'rb') as f:
-        print(f.read())
         return f.read()
 
 def load_ppt(path):
