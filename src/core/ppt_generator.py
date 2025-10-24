@@ -1,5 +1,6 @@
 from pptx import Presentation
 
+
 def generate_pptx(json_code):
     path = "data/output.pptx"
     ppt = Presentation()
@@ -20,7 +21,17 @@ def generate_pptx(json_code):
         if isinstance(content, str):
             tf.text = content
         elif isinstance(content, list):
-            for i, bullet_text in enumerate(content):
+            for i, bullet_item in enumerate(content):
+
+                bullet_text = ""
+                if isinstance(bullet_item, str):
+                    bullet_text = bullet_item
+                elif isinstance(bullet_item, dict):
+                    bullet_text = bullet_item.get('point',
+                                                  bullet_item.get('bullet', bullet_item.get('item', str(bullet_item))))
+                else:
+                    bullet_text = str(bullet_item)
+
                 if i == 0:
                     tf.text = bullet_text
                 else:

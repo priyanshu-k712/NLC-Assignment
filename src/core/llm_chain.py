@@ -12,7 +12,6 @@ if not api_key:
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=api_key)
 
-
 SYSTEM_PROMPT = (
     "You are a top class college professor and also a world class Educationalist. "
     "You are so good at teaching modern day students, You are master at teaching them in a way that once they study from you they dont have to look at the same topic twice."
@@ -23,7 +22,10 @@ SYSTEM_PROMPT = (
     "You make sure that your content doesn't only aligns with the curriculum but also is in easiest language possible so any student beginner or an expert."
     "You help professors to create teaching material for them to use in their classroom."
     "You dont chit-chat and instantly give the study material as per the user requirements."
-    "If the format is **PPT Outline Code(Structured JSON Code)**, you **MUST** respond with **ONLY** a single, valid, and minified JSON object with no external markdown (like ```json) or explanation."
+
+    # FIX: Removed the "minified" requirement. "re.DOTALL" in the parser can handle multi-line JSON.
+    "If the format is **PPT Outline Code(Structured JSON Code)**, you **MUST** respond with **ONLY** a single, valid JSON array. "
+    "Do not include any markdown fences (like ```json) or any explanatory text before or after the JSON."
 )
 
 USER_PROMPT_TEMPLATE = (
@@ -42,9 +44,7 @@ CHAT_PROMPT = ChatPromptTemplate(
 )
 
 
-
-def generate_content(prompt_variables: Dict[str, str],) -> str:
-
+def generate_content(prompt_variables: Dict[str, str], ) -> str:
     chain = CHAT_PROMPT | llm
 
     try:

@@ -1,4 +1,5 @@
 import sys, os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from sidebar import render_sidebar
@@ -7,6 +8,7 @@ from src.core.content_loader import load_content_from_url, load_content_from_fil
 import streamlit as st
 from src.core.ppt_generator import generate_pptx
 import re
+
 
 def main_app():
     st.set_page_config(
@@ -43,13 +45,10 @@ def main_app():
                     try:
                         prompt_vars['content'] = ("your expert internal knowledge and the topic name only. "
                                                   "Since the requested format is **PPT Outline Code(Structured JSON Code)**, "
-                                                  "the output MUST be a JSON array of slides, each having 'title' and 'bullets' keys.")
+                                                  "the output MUST be a JSON array of slides, each having 'title' and 'bullets' (a list of strings) keys.")
                         content = generate_content(prompt_vars)
-                        clean_content = re.sub(r"```(?:json)?|```", "", content).strip()
-                        match = re.search(r"\[.*\]", clean_content, re.DOTALL)
-                        if match:
-                            clean_content = match.group(0)
-                        slides_data = safe_load_json_from_string(clean_content)
+                        slides_data = safe_load_json_from_string(content)
+
                         path = generate_pptx(slides_data)
                         try:
                             st.download_button(
@@ -78,15 +77,20 @@ def main_app():
                 if inputs['source_mode'] == "Use URL":
                     if inputs['output_format'] == 'PPT Outline Code(Structured JSON Code)':
                         try:
-                            data = load_content_from_url(inputs['external_content'])
-                            prompt_vars['content'] = data
+                            # FIX: Join the list from load_content_from_url into a single string
+                            data_list = load_content_from_url(inputs['external_content'])
+                            data_string = "\n".join(data_list)
+
+                            prompt_vars['content'] = (
+                                f"Use the following text to generate the content: {data_string}\n\n"
+                                "Since the requested format is **PPT Outline Code(Structured JSON Code)**, "
+                                "the output MUST be a JSON array of slides, each having 'title' and 'bullets' (a list of strings) keys.")
+
                             prompt_vars['format'] = inputs['output_format']
                             code = generate_content_from_data(prompt_vars)
-                            clean_content = re.sub(r"```(?:json)?|```", "", code).strip()
-                            match = re.search(r"\[.*\]", clean_content, re.DOTALL)
-                            if match:
-                                clean_content = match.group(0)
-                            slides_data = safe_load_json_from_string(clean_content)
+
+                            slides_data = safe_load_json_from_string(code)
+
                             path = generate_pptx(slides_data)
                             try:
                                 st.download_button(
@@ -103,8 +107,10 @@ def main_app():
                             st.session_state['generated_content'] = f"Invocation Error: {e}"
                     else:
                         try:
-                            data = load_content_from_url(inputs['external_content'])
-                            prompt_vars['content'] = data
+                            data_list = load_content_from_url(inputs['external_content'])
+                            # FIX: Join the list here as well for non-PPT formats
+                            data_string = "\n".join(data_list)
+                            prompt_vars['content'] = data_string
                             content = generate_content_from_data(prompt_vars)
                             st.session_state['generated_content'] = content
                             st.success("Content generation complete!")
@@ -120,14 +126,17 @@ def main_app():
                                 data_string = data_bytes.decode('utf-8', errors='replace')
                             except UnicodeDecodeError:
                                 data_string = data_bytes.decode('latin-1', errors='replace')
-                            prompt_vars['content'] = data_string
+
+                            prompt_vars['content'] = (
+                                f"Use the following text to generate the content: {data_string}\n\n"
+                                "Since the requested format is **PPT Outline Code(Structured JSON Code)**, "
+                                "the output MUST be a JSON array of slides, each having 'title' and 'bullets' (a list of strings) keys.")
+
                             prompt_vars['format'] = inputs['output_format']
                             code = generate_content_from_data(prompt_vars)
-                            clean_content = re.sub(r"```(?:json)?|```", "", code).strip()
-                            match = re.search(r"\[.*\]", clean_content, re.DOTALL)
-                            if match:
-                                clean_content = match.group(0)
-                            slides_data = safe_load_json_from_string(clean_content)
+
+                            slides_data = safe_load_json_from_string(code)
+
                             path = generate_pptx(slides_data)
                             try:
                                 st.download_button(
@@ -156,7 +165,6 @@ def main_app():
                         except Exception as e:
                             st.error(f"An unexpected error occurred during Generating Content with File Upload: {e}")
                             st.session_state['generated_content'] = f"Invocation Error: {e}"
-
 
     if st.session_state['generated_content']:
         st.markdown(st.session_state['generated_content'])
