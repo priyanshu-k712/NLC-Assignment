@@ -33,7 +33,7 @@ def render_sidebar() -> Dict[str, Any]:
 
         source_mode = st.radio(
             "How will you provide the source material?",
-            ["Topic Only (Use LLM Knowledge)", "Use URL", "Upload File"],
+            ["Topic Only (Use LLM Knowledge)", "Use URL", "Upload File", "All"],
             index=0
         )
 
@@ -61,4 +61,22 @@ def render_sidebar() -> Dict[str, Any]:
                     st.error(f"An unexpected error occurred during LLM invocation: {e}")
                     st.session_state['generated_content'] = f"Invocation Error: {e}"
 
+        elif source_mode == "All":
+            url_input = st.text_input("Enter URL", placeholder="(For right now Use Wikipedia URL)")
+            if url_input:
+                st.info("URL input received. The core logic will fetch content from this URL.")
+                inputs['external_content'] = url_input
+            else:
+                st.warning("Please provide a valid URL.")
+
+            uploaded_file = st.file_uploader("Upload DOCX or Text File", type=['docx', 'doc', 'txt'])
+            if uploaded_file is not None:
+                try:
+                    with open("data/" + uploaded_file.name, 'wb') as f:
+                        f.write(uploaded_file.getvalue())
+                    inputs['external_content2'] = "data/" + uploaded_file.name
+                    st.success(f"File '{uploaded_file.name}' uploaded successfully.")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred during File accepting: {e}")
+                    st.session_state['generated_content'] = f"Invocation Error: {e}"
     return inputs

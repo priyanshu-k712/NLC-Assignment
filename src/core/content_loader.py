@@ -35,7 +35,6 @@ def safe_load_json_from_string(input_str: str):
 
     json_str = match.group(0)
 
-    # Fix common trailing commas
     json_str = re.sub(r",\s*]", "]", json_str)
     json_str = re.sub(r",\s*}", "}", json_str)
 
