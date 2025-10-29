@@ -27,15 +27,28 @@ def safe_load_json_from_string(input_str: str):
     if not input_str:
         raise ValueError("Input string is empty")
 
+    # Remove Markdown code fences
     cleaned_str = re.sub(r"```(?:json)?|```", "", input_str).strip()
 
-    match = re.search(r"\[.*\]", cleaned_str, re.DOTALL)
+    # Remove Markdown formatting (**bold**, *italic*, `code`, # headings)
+    cleaned_str = re.sub(r"\*\*(.*?)\*\*", r"\1", cleaned_str)
+    cleaned_str = re.sub(r"\*(.*?)\*", r"\1", cleaned_str)
+    cleaned_str = re.sub(r"`(.*?)`", r"\1", cleaned_str)
+    cleaned_str = re.sub(r"#+\s*", "", cleaned_str)
+
+    # Try to extract JSON array or object
+    match = re.search(r"(\[.*\]|\{.*\})", cleaned_str, re.DOTALL)
     if not match:
-        raise ValueError("No JSON array found in the string")
+        raise ValueError("No JSON structure found in the string")
 
     json_str = match.group(0)
 
-    json_str = re.sub(r",\s*]", "]", json_str)
-    json_str = re.sub(r",\s*}", "}", json_str)
+    # Remove trailing commas
+    json_str = re.sub(r",\s*([\]}])", r"\1", json_str)
 
-    return json.loads(json_str)
+    # Try parsing safely
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        print("\n⚠️ JSON parsing failed. Here's what was received:\n", json_str[:500])
+        raise ValueError(f"Invalid JSON format: {e}")

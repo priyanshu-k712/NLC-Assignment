@@ -128,6 +128,7 @@ def main_app():
                                 st.error(str(e) + "\nTry Generating again if you get a JSON Error.")
                             finally:
                                 safe_remove(path)
+                                safe_remove(inputs['external_content2'])
 
                             st.success("Content generation complete!")
                         except Exception as e:
@@ -150,7 +151,9 @@ def main_app():
                         except Exception as e:
                             st.error(f"An unexpected error occurred during Generating Content with File Upload: {e}")
                             st.session_state['generated_content'] = f"Invocation Error: {e}"
-                        pass
+                        finally:
+                            safe_remove(inputs['external_content2'])
+
 
 
                 # Case 2: External content provided
